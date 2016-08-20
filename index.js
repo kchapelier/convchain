@@ -16,29 +16,66 @@ ConvChain.prototype.execute = function (n, temperature, size, iterations, rng) {
     }
 
     var weights = new Float32Array(1 << (n * n));
-    weights.fill(0);
+
+    var pattern = function pattern (fn) {
+        var result = new Array(n * n),
+            x,
+            y;
+
+        for (y = 0; y < n; y++) {
+            for (x = 0; x < n; x++) {
+                result[x + y * n] = fn(x, y);
+            }
+        }
+
+        return result;
+    };
+
+    var rotate = function rotate (p) {
+        return pattern((x, y) => p[n - 1 - y + x * n]);
+    };
+
+    var reflect = function reflect (p) {
+        return pattern((x, y) => p[n - 1 - x + y * n]);
+    };
+
+    var index = function index (p) {
+        var result = 0,
+            power = 1,
+            i;
+
+        for (i = 0; i < p.length; i++) {
+            result += p[p.length - 1 - i] ? power : 0;
+            power *= 2;
+        }
+
+        return result;
+    };
 
     var k, x, y;
 
-    for (y = 0; y < sample.length; y++) {
-        for (x = 0; x < sample[y].length; x++) {
-            var p0 = Pattern.createFromArray(sample, x, y, n);
-            var p1 = p0.rotated();
-            var p2 = p1.rotated();
-            var p3 = p2.rotated();
-            var p4 = p0.reflected();
-            var p5 = p1.reflected();
-            var p6 = p2.reflected();
-            var p7 = p3.reflected();
+    var sampleWidth = sample[0].length,
+        sampleHeight = sample.length;
 
-            weights[p0.index()] += 1;
-            weights[p1.index()] += 1;
-            weights[p2.index()] += 1;
-            weights[p3.index()] += 1;
-            weights[p4.index()] += 1;
-            weights[p5.index()] += 1;
-            weights[p6.index()] += 1;
-            weights[p7.index()] += 1;
+    for (y = 0; y < sampleHeight; y++) {
+        for (x = 0; x < sampleWidth; x++) {
+            var p0 = pattern((dx, dy) => sample[(x + dx) % sampleWidth][((y + dy) % sampleHeight)]);
+            var p1 = rotate(p0);
+            var p2 = rotate(p1);
+            var p3 = rotate(p2);
+            var p4 = reflect(p0);
+            var p5 = reflect(p1);
+            var p6 = reflect(p2);
+            var p7 = reflect(p3);
+
+            weights[index(p0)] += 1;
+            weights[index(p1)] += 1;
+            weights[index(p2)] += 1;
+            weights[index(p3)] += 1;
+            weights[index(p4)] += 1;
+            weights[index(p5)] += 1;
+            weights[index(p6)] += 1;
+            weights[index(p7)] += 1;
         }
     }
 
@@ -52,103 +89,54 @@ ConvChain.prototype.execute = function (n, temperature, size, iterations, rng) {
         }
     }
 
-    var energyExp = function (i, j) {
-        var value = 1.0;
+    for (k = 0; k < iterations * size * size; k++) {
+        var r = (rng() * size * size) | 0;
+        x = (r % size) | 0;
+        y = (r / size) | 0;
 
-        for (var y = j - n + 1; y <= j + n - 1; y++) {
-            for (var x = i - n + 1; x <= i + n - 1; x++) {
-                value *= weights[Pattern.createFromArray(field, x, y, n).index()];
+        var q = 1;
+
+        for (var sy = y - n + 1; sy <= y + n - 1; sy++) {
+            for (var sx = x - n + 1; sx <= x + n - 1; sx++) {
+                var ind = 0,
+                    difference = 0;
+
+                for (var dy = 0; dy < n; dy++) for (var dx = 0; dx < n; dx++) {
+                    var X = sx + dx;
+                    if (X < 0) X += size;
+                    else if (X >= size) X -= size;
+
+                    var Y = sy + dy;
+                    if (Y < 0) Y += size;
+                    else if (Y >= size) Y -= size;
+
+                    var value = field[X][Y];
+                    var power = 1 << (dy * n + dx);
+                    ind += value ? power : 0;
+                    if (X == x && Y == y) difference = value ? power : -power;
+                }
+
+                q *= weights[ind - difference] / weights[ind];
             }
         }
 
-        return value;
-    };
 
-    var metropolis = function metropolis (i, j) {
-        var p = energyExp(i, j);
-        field[i][j] = (!field[i][j]);
-        var q = energyExp(i, j);
-
-        if (Math.pow(q / p, 1.0 / temperature) < rng()) {
-            field[i][j] = (!field[i][j]);
+        if (q >= 1) {
+            field[x][y] = !field[x][y];
+            continue;
         }
-    };
 
-    for (k = 0; k < iterations * size * size; k++) {
-        metropolis((rng() * size) | 0, (rng() * size) | 0);
+        if (temperature != 1) {
+            q = Math.pow(q, 1.0 / temperature);
+        }
+
+        if (q > rng()) {
+            field[x][y] = !field[x][y];
+        }
     }
 
     return field;
 };
-
-/*
-public Pattern(int size, Func<int, int, bool> f) {
-    data = new bool[size, size];
-    Set(f);
-}
-
-public Pattern(bool[,] field, int x, int y, int size) {
-    this(size, (i, j) => false);
-    Set(
-        (i, j) => field[
-            (x + i + field.GetLength(0)) % field.GetLength(0),
-            (y + j + field.GetLength(1)) % field.GetLength(1)
-        ]
-    );
-}
-
-private void Set(Func<int, int, bool> f) {
-    for (int j = 0; j < Size; j++) {
-        for (int i = 0; i < Size; i++) {
-            data[i, j] = f(i, j);
-        }
-    }
-*/
-
-var Pattern = function Pattern (data, size) {
-    this.data = data;
-    this.size = size;
-};
-
-Pattern.createFromFunction = function (size, fn) {
-    var data = new Array(size);
-
-    for (var x = 0; x < size; x++) {
-        data[x] = new Array(size);
-
-        for (var y = 0; y < size; y++) {
-            data[x][y] = fn(x, y);
-        }
-    }
-
-    return new Pattern(data, size);
-};
-
-Pattern.createFromArray = function (field, x, y, size) {
-    return Pattern.createFromFunction(size, (i, j) => field[(x + i + field.length) % field.length][(y + j + field[0].length) % field[0].length]);
-};
-
-Pattern.prototype.rotated = function () {
-    return Pattern.createFromFunction(this.size, (x, y) => this.data[this.size - 1 - y][x]);
-};
-
-Pattern.prototype.reflected = function () {
-    return Pattern.createFromFunction(this.size, (x, y) => this.data[this.size - 1 - x][y]);
-};
-
-Pattern.prototype.index = function () {
-    var result = 0;
-
-    for (var y = 0; y < this.size; y++) {
-        for (var x = 0; x < this.size; x++) {
-            result += this.data[x][y] ? 1 << (y * this.size + x) : 0;
-        }
-    }
-
-    return result;
-};
-
-
 
 var testSample = [
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -179,8 +167,7 @@ var time = Date.now();
 var size = 15;
 var conv = new ConvChain(testSample);
 
-var result = conv.execute(3, 0.01, size, 50);
-
+var result = conv.execute(3, 0.5, size, 50);
 
 result.forEach((v) => {
     var s = '';
