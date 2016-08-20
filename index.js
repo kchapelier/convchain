@@ -113,12 +113,10 @@ var Pattern = function Pattern (data, size) {
 Pattern.createFromFunction = function (size, fn) {
     var data = new Array(size);
 
-    for (var i = 0; i < size; i++) {
-        data[i] = new Array(size);
-    }
+    for (var x = 0; x < size; x++) {
+        data[x] = new Array(size);
 
-    for (var y = 0; y < size; y++) {
-        for (var x = 0; x < size; x++) {
+        for (var y = 0; y < size; y++) {
             data[x][y] = fn(x, y);
         }
     }
@@ -127,18 +125,15 @@ Pattern.createFromFunction = function (size, fn) {
 };
 
 Pattern.createFromArray = function (field, x, y, size) {
-    return Pattern.createFromFunction(size, (i, j) => field[
-        (x + i + field.length) % field.length,
-        (y + j + field[0].length) % field[0].length
-    ]);
+    return Pattern.createFromFunction(size, (i, j) => field[(x + i + field.length) % field.length][(y + j + field[0].length) % field[0].length]);
 };
 
 Pattern.prototype.rotated = function () {
-    return Pattern.createFromFunction(this.size, (x, y) => this.data[this.size - 1 - y, x]);
+    return Pattern.createFromFunction(this.size, (x, y) => this.data[this.size - 1 - y][x]);
 };
 
 Pattern.prototype.reflected = function () {
-    return Pattern.createFromFunction(this.size, (x, y) => this.data[this.size - 1 - x, y]);
+    return Pattern.createFromFunction(this.size, (x, y) => this.data[this.size - 1 - x][y]);
 };
 
 Pattern.prototype.index = function () {
@@ -178,12 +173,19 @@ var testSample = [
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 ];
 
+
+var time = Date.now();
+
+var size = 15;
 var conv = new ConvChain(testSample);
 
-var result = conv.execute(3, 0.01, 25, 5);
+var result = conv.execute(3, 0.01, size, 50);
+
 
 result.forEach((v) => {
     var s = '';
     v.map(v => { s = s + (v ? 'O' : '.') + ' '; });
     console.log(s);
 });
+
+console.log(Date.now() - time);
