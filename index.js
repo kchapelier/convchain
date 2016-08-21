@@ -45,31 +45,17 @@ ConvChain.prototype.setSample = function (sample, sampleSize) {
 
         this.sample = flatArray;
     }
+
+    // invalidate cached weights
+    this.cachedN = null;
+    this.cachedWeights = null;
 };
 
-/**
- * Generate a pattern based on the sample pattern
- * @param {int|Array} resultSize Width and height of the generated pattern
- * @param {int} n Receptor size, an integer greater than 0
- * @param {float} temperature Temperature, a value between 0 and 1
- * @param {int} iterations Number of iterations
- * @param {function} [rng] A random number generator, default to Math.random
- * @returns {Uint8Array} Generated pattern, returned as a flat Uint8Array
- */
-ConvChain.prototype.generate = function (resultSize, n, temperature, iterations, rng) {
-    var sample = this.sample,
-        sampleWidth = this.sampleWidth,
-        sampleHeight = this.sampleHeight,
-        resultWidth = typeof resultSize === 'number' ? resultSize : resultSize[0],
-        resultHeight = typeof resultSize === 'number' ? resultSize : resultSize[1],
-        field = new Uint8Array(resultWidth * resultHeight),
-        weights = new Float32Array(1 << (n * n)),
+var processWeights = function processWeights (sample, sampleWidth, sampleHeight, n) {
+    var weights = new Float32Array(1 << (n * n)),
         k,
         x,
         y;
-
-    n = Math.max(n, 1);
-    rng = rng || Math.random;
 
     var pattern = function pattern (fn) {
         var result = new Array(n * n),
@@ -133,6 +119,45 @@ ConvChain.prototype.generate = function (resultSize, n, temperature, iterations,
             weights[k] = 0.1;
         }
     }
+
+    return weights;
+};
+
+/**
+ * Get the weights for the sample pattern and the given receptor size
+ * @param {int} n Receptor size, an integer greater than 0
+ * @returns {Float32Array}
+ * @private
+ */
+ConvChain.prototype.getWeights = function (n) {
+    // check if we have to generate new weights, otherwise return cached result
+    if (this.cachedN !== n) {
+        this.cachedN = n;
+        this.cachedWeights = processWeights(this.sample, this.sampleWidth, this.sampleHeight, n);
+    }
+
+    return this.cachedWeights;
+};
+
+/**
+ * Generate a pattern based on the sample pattern
+ * @param {int|Array} resultSize Width and height of the generated pattern
+ * @param {int} n Receptor size, an integer greater than 0
+ * @param {float} temperature Temperature, a value between 0 and 1
+ * @param {int} iterations Number of iterations
+ * @param {function} [rng] A random number generator, default to Math.random
+ * @returns {Uint8Array} Generated pattern, returned as a flat Uint8Array
+ */
+ConvChain.prototype.generate = function (resultSize, n, temperature, iterations, rng) {
+    var resultWidth = typeof resultSize === 'number' ? resultSize : resultSize[0],
+        resultHeight = typeof resultSize === 'number' ? resultSize : resultSize[1],
+        field = new Uint8Array(resultWidth * resultHeight),
+        weights = this.getWeights(n),
+        k,
+        x,
+        y;
+
+    rng = rng || Math.random;
 
     for (y = 0; y < resultHeight; y++) {
         for (x = 0; x < resultWidth; x++) {
