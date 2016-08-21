@@ -2,6 +2,8 @@
 
 Vanilla javascript port of [ConvChain](https://github.com/mxgmn/ConvChain).
 
+[Interactive demo](http://www.kchapelier.com/convchain-demo/)
+
 ## Installing and testing
 
 With [npm](http://npmjs.org) do:
@@ -92,7 +94,7 @@ var convChain = new ConvChain(testSample);
 
 **convChain.setSample(sample[, sampleSize])**
 
-Same arguments as the constructor
+Same arguments as the constructor.
 
 **convChain.generate(resultSize, n, temperature, iterations[, rng])**
 
@@ -105,5 +107,15 @@ Generate a new pattern based on the sample pattern. The generated pattern is ret
  - *rng :* A function to use as random number generator, defaults to Math.random.
 
 ```js
-convChain.generate([80, 80], 3, 0.5, 4);
+var result = convChain.generate([100, 50], 3, 0.5, 4);
 ```
+
+## Changelog
+
+### [1.0.0](https://github.com/kchapelier/convchain/tree/1.0.0) (2018-08-21)
+
+ * First implementation.
+
+### License
+
+MIT

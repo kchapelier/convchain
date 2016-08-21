@@ -1,12 +1,24 @@
 {
   "name": "convchain",
   "version": "1.0.0",
-  "description": "",
-  "private": true,
+  "description": "Vanilla javascript port of https://github.com/mxgmn/ConvChain",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kchapelier/convchain.git"
+  },
+  "keywords": [
+    "pattern",
+    "generation",
+    "markov"
+  ],
   "author": "Kevin Chapelier",
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kchapelier/convchain/issues"
+  },
+  "homepage": "https://github.com/kchapelier/convchain"
 }
