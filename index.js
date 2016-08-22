@@ -139,42 +139,33 @@ ConvChain.prototype.getWeights = function (n) {
     return this.cachedWeights;
 };
 
-/**
- * Generate a pattern based on the sample pattern
- * @param {int|Array} resultSize Width and height of the generated pattern
- * @param {int} n Receptor size, an integer greater than 0
- * @param {float} temperature Temperature, a value between 0 and 1
- * @param {int} iterations Number of iterations
- * @param {function} [rng] A random number generator, default to Math.random
- * @returns {Uint8Array} Generated pattern, returned as a flat Uint8Array
- */
-ConvChain.prototype.generate = function (resultSize, n, temperature, iterations, rng) {
-    var resultWidth = typeof resultSize === 'number' ? resultSize : resultSize[0],
-        resultHeight = typeof resultSize === 'number' ? resultSize : resultSize[1],
-        field = new Uint8Array(resultWidth * resultHeight),
-        weights = this.getWeights(n),
-        k,
-        x,
-        y;
+var generateBaseField = function (resultWidth, resultHeight, rng) {
+    var field = new Uint8Array(resultWidth * resultHeight),
+        i;
 
-    rng = rng || Math.random;
-
-    for (y = 0; y < resultHeight; y++) {
-        for (x = 0; x < resultWidth; x++) {
-            field[x + y * resultWidth] = rng() < 0.5;
-        }
+    for (i = 0; i < field.length; i++) {
+        field[i] = rng() < 0.5;
     }
 
-    for (k = 0; k < iterations * resultWidth * resultHeight; k++) {
-        var r = (rng() * resultWidth * resultHeight) | 0,
-            q = 1,
-            sy,
-            sx,
-            dy,
-            dx,
-            ind,
-            difference;
+    return field;
+};
 
+var iteration = function iteration (field, weights, resultWidth, resultHeight, n, temperature, rng) {
+    var r,
+        q,
+        i,
+        x,
+        y,
+        sy,
+        sx,
+        dy,
+        dx,
+        ind,
+        difference;
+
+    for (i = 0; i < resultWidth * resultHeight; i++) {
+        q = 1;
+        r = (rng() * resultWidth * resultHeight) | 0;
         x = (r % resultWidth) | 0;
         y = (r / resultWidth) | 0;
 
@@ -216,20 +207,55 @@ ConvChain.prototype.generate = function (resultSize, n, temperature, iterations,
             }
         }
 
-
         if (q >= 1) {
             field[x + y * resultWidth] = !field[x + y * resultWidth];
-            continue;
-        }
+        } else {
+            if (temperature != 1) {
+                q = Math.pow(q, 1.0 / temperature);
+            }
 
-        if (temperature != 1) {
-            q = Math.pow(q, 1.0 / temperature);
-        }
-
-        if (q > rng()) {
-            field[x + y * resultWidth] = !field[x + y * resultWidth];
+            if (q > rng()) {
+                field[x + y * resultWidth] = !field[x + y * resultWidth];
+            }
         }
     }
+};
+
+/**
+ * Generate a pattern based on the sample pattern
+ * @param {int|Array} resultSize Width and height of the generated pattern
+ * @param {int} n Receptor size, an integer greater than 0
+ * @param {float} temperature Temperature, a value between 0 and 1
+ * @param {int} iterations Number of iterations
+ * @param {function} [rng] A random number generator, default to Math.random
+ * @returns {Uint8Array} Generated pattern, returned as a flat Uint8Array
+ */
+ConvChain.prototype.generate = function (resultSize, n, temperature, iterations, rng) {
+    rng = rng || Math.random;
+
+    var resultWidth = typeof resultSize === 'number' ? resultSize : resultSize[0],
+        resultHeight = typeof resultSize === 'number' ? resultSize : resultSize[1],
+        field = generateBaseField(resultWidth, resultHeight, rng),
+        weights = this.getWeights(n),
+        i;
+
+    for (i = 0; i < iterations; i++) {
+        iteration(field, weights, resultWidth, resultHeight, n, temperature, rng);
+    }
+
+    return field;
+};
+
+ConvChain.prototype.iterate = function (field, resultSize, n, temperature, rng) {
+    var resultWidth = typeof resultSize === 'number' ? resultSize : resultSize[0],
+        resultHeight = typeof resultSize === 'number' ? resultSize : resultSize[1],
+        weights = this.getWeights(n),
+        i;
+
+    rng = rng || Math.random;
+    field = field || generateBaseField(resultWidth, resultHeight, rng);
+
+    iteration(field, weights, resultWidth, resultHeight, n, temperature, rng);
 
     return field;
 };
