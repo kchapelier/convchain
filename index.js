@@ -139,7 +139,7 @@ ConvChain.prototype.getWeights = function (n) {
     return this.cachedWeights;
 };
 
-var generateBaseField = function (resultWidth, resultHeight, rng) {
+var generateBaseField = function generateBaseField (resultWidth, resultHeight, rng) {
     var field = new Uint8Array(resultWidth * resultHeight),
         i;
 
@@ -150,7 +150,7 @@ var generateBaseField = function (resultWidth, resultHeight, rng) {
     return field;
 };
 
-var iteration = function iteration (field, weights, resultWidth, resultHeight, n, temperature, rng) {
+var applyChanges = function applyChanges (field, weights, resultWidth, resultHeight, n, temperature, changes, rng) {
     var r,
         q,
         i,
@@ -163,7 +163,7 @@ var iteration = function iteration (field, weights, resultWidth, resultHeight, n
         ind,
         difference;
 
-    for (i = 0; i < resultWidth * resultHeight; i++) {
+    for (i = 0; i < changes; i++) {
         q = 1;
         r = (rng() * resultWidth * resultHeight) | 0;
         x = (r % resultWidth) | 0;
@@ -235,27 +235,40 @@ ConvChain.prototype.generate = function (resultSize, n, temperature, iterations,
 
     var resultWidth = typeof resultSize === 'number' ? resultSize : resultSize[0],
         resultHeight = typeof resultSize === 'number' ? resultSize : resultSize[1],
+        changesPerIterations = resultWidth * resultHeight,
         field = generateBaseField(resultWidth, resultHeight, rng),
         weights = this.getWeights(n),
         i;
 
     for (i = 0; i < iterations; i++) {
-        iteration(field, weights, resultWidth, resultHeight, n, temperature, rng);
+        applyChanges(field, weights, resultWidth, resultHeight, n, temperature, changesPerIterations, rng);
     }
 
     return field;
 };
 
-ConvChain.prototype.iterate = function (field, resultSize, n, temperature, rng) {
+/**
+ * Execute a specific number of operations
+ * @param {Uint8Array|null} field Pattern on which to iterate upon, default to a noisy pattern if null is given
+ * @param {int|Array} resultSize Width and height of the generated pattern
+ * @param {int} n Receptor size, an integer greater than 0
+ * @param {float} temperature Temperature, a value between 0 and 1
+ * @param {int} [tries] Number of operations to execute, default to the result's width multiplied by the result's height
+ * @param {function} [rng] A random number generator, default to Math.random
+ * @returns {Uint8Array} Pattern iterated upon, returned as a flat Uint8Array
+ */
+ConvChain.prototype.iterate = function (field, resultSize, n, temperature, tries, rng) {
     var resultWidth = typeof resultSize === 'number' ? resultSize : resultSize[0],
         resultHeight = typeof resultSize === 'number' ? resultSize : resultSize[1],
         weights = this.getWeights(n),
         i;
 
+    tries = tries || resultWidth * resultHeight;
+
     rng = rng || Math.random;
     field = field || generateBaseField(resultWidth, resultHeight, rng);
 
-    iteration(field, weights, resultWidth, resultHeight, n, temperature, rng);
+    applyChanges(field, weights, resultWidth, resultHeight, n, temperature, tries, rng);
 
     return field;
 };
