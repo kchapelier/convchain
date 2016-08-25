@@ -249,8 +249,8 @@ ConvChain.prototype.generate = function (resultSize, n, temperature, iterations,
 
 /**
  * Execute a specific number of operations on a given pattern
- * @param {Uint8Array|null} field Pattern on which to iterate upon, default to a noisy pattern if null is given
- * @param {int|Array} resultSize Width and height of the generated pattern
+ * @param {Uint8Array|null} field Pattern on which to iterate, default to a noisy pattern if null is given
+ * @param {int|Array} resultSize Width and height of the pattern on which to iterate
  * @param {int} n Receptor size, an integer greater than 0
  * @param {float} temperature Temperature
  * @param {int} [tries] Number of operations to execute, default to the result's width multiplied by the result's height
