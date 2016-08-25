@@ -102,7 +102,7 @@ Generate a new pattern based on the sample pattern. The generated pattern is ret
 
  - *resultSize :* Width and height of the generated pattern.
  - *n :* Receptor size, an integer greater than 0.
- - *temperature :* Temperature, a value between 0 and 1.
+ - *temperature :* Temperature, a float.
  - *iterations :* Number of iterations.
  - *rng :* A function to use as random number generator, defaults to Math.random.
 
@@ -110,7 +110,32 @@ Generate a new pattern based on the sample pattern. The generated pattern is ret
 var result = convChain.generate([100, 50], 3, 0.5, 4);
 ```
 
+**convChain.iterate(field, resultSize, n, temperature[, tries[, rng]])**
+
+Execute a specific number of operations on a given pattern.
+
+ - *field :* An existing pattern given as a flat Uint8Array. If *null* is given, a noisy pattern will be used instead.
+ - *resultSize :* Width and height of the generated pattern.
+ - *n :* Receptor size, an integer greater than 0.
+ - *temperature :* Temperature, a float.
+ - *tries :* Number of operations to execute, default to the result's width multiplied by the result's height
+ - *rng :* A function to use as random number generator, defaults to Math.random.
+
+```js
+var field = null;
+
+for (var i = 0; i < 32; i++) {
+    field = convChain.iterate(field, [64, 64], 3, 0.2, 128);
+
+    // ... do something with the return pattern here
+}
+```
+
 ## Changelog
+
+### [1.1.0](https://github.com/kchapelier/convchain/tree/1.1.0) (2018-08-25)
+
+ * Implement the iterate method.
 
 ### [1.0.0](https://github.com/kchapelier/convchain/tree/1.0.0) (2018-08-21)
 

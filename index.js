@@ -225,7 +225,7 @@ var applyChanges = function applyChanges (field, weights, resultWidth, resultHei
  * Generate a pattern based on the sample pattern
  * @param {int|Array} resultSize Width and height of the generated pattern
  * @param {int} n Receptor size, an integer greater than 0
- * @param {float} temperature Temperature, a value between 0 and 1
+ * @param {float} temperature Temperature
  * @param {int} iterations Number of iterations
  * @param {function} [rng] A random number generator, default to Math.random
  * @returns {Uint8Array} Generated pattern, returned as a flat Uint8Array
@@ -248,11 +248,11 @@ ConvChain.prototype.generate = function (resultSize, n, temperature, iterations,
 };
 
 /**
- * Execute a specific number of operations
+ * Execute a specific number of operations on a given pattern
  * @param {Uint8Array|null} field Pattern on which to iterate upon, default to a noisy pattern if null is given
  * @param {int|Array} resultSize Width and height of the generated pattern
  * @param {int} n Receptor size, an integer greater than 0
- * @param {float} temperature Temperature, a value between 0 and 1
+ * @param {float} temperature Temperature
  * @param {int} [tries] Number of operations to execute, default to the result's width multiplied by the result's height
  * @param {function} [rng] A random number generator, default to Math.random
  * @returns {Uint8Array} Pattern iterated upon, returned as a flat Uint8Array

@@ -1,6 +1,6 @@
 {
   "name": "convchain",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Vanilla javascript port of https://github.com/mxgmn/ConvChain",
   "main": "index.js",
   "scripts": {
