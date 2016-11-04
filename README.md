@@ -133,11 +133,11 @@ for (var i = 0; i < 32; i++) {
 
 ## Changelog
 
-### [1.1.0](https://github.com/kchapelier/convchain/tree/1.1.0) (2018-08-25)
+### [1.1.0](https://github.com/kchapelier/convchain/tree/1.1.0) (2016-08-25)
 
  * Implement the iterate method.
 
-### [1.0.0](https://github.com/kchapelier/convchain/tree/1.0.0) (2018-08-21)
+### [1.0.0](https://github.com/kchapelier/convchain/tree/1.0.0) (2016-08-21)
 
  * First implementation.
 
